@@ -26,7 +26,7 @@ A powerful **Model Context Protocol (MCP) server** that provides AI assistants (
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/yourusername/mcp-9mm-dex-server.git
+git clone https://github.com/mayaswap/mcp-9mm-dex-server.git
 cd mcp-9mm-dex-server
 npm install
 ```
@@ -180,8 +180,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/mcp-9mm-dex-server/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/mcp-9mm-dex-server/discussions)
+- **Issues**: [GitHub Issues](https://github.com/mayaswap/mcp-9mm-dex-server/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/mayaswap/mcp-9mm-dex-server/discussions)
 
 ---
 

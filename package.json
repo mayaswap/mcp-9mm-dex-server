@@ -6,12 +6,12 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/mcp-9mm-dex-server.git"
+    "url": "git+https://github.com/mayaswap/mcp-9mm-dex-server.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/mcp-9mm-dex-server/issues"
+    "url": "https://github.com/mayaswap/mcp-9mm-dex-server/issues"
   },
-  "homepage": "https://github.com/yourusername/mcp-9mm-dex-server#readme",
+  "homepage": "https://github.com/mayaswap/mcp-9mm-dex-server#readme",
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
