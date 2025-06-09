@@ -1,0 +1,77 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build output
+dist/
+build/
+*.js.map
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+
+# Database files
+*.db
+*.sqlite
+
+# Cache directories
+.cache/
+src/cache/
+
+# Private keys and sensitive data
+*.pem
+*.key
+private/
+secrets/
+
+# Test files created during development
+test-*.js
+test-*.cjs
+test-*.sh
+test-*.json
+claude-desktop-config-minimal.json
+simple-test.cjs
+test-auto-wallet.cjs
+
+# Internal documentation
+README-INTERNAL.md
+cursor-rules-setup-corrected.md
+*.mdc
+
+# Deployment files
+deployments-*/
+
+# User data
+users.json
+wallets.json
+
+# OS files
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/ 
