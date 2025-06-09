@@ -367,7 +367,14 @@ async function handleExecuteWalletSwap(args: any) {
           amount,
           slippage: `${slippage}%`,
           walletUsed: userSession.wallet.address,
+          dexUsed: result.metadata?.dexUsed || 'Unknown',
+          quotedAmount: result.metadata?.quotedAmount || 'Unknown',
         },
+        aggregatorSavings: result.metadata?.savings ? {
+          amount: result.metadata.savings.amount,
+          percentage: `${result.metadata.savings.percentage.toFixed(2)}%`,
+          message: `You saved ${result.metadata.savings.percentage.toFixed(2)}% by using our DEX aggregator!`
+        } : undefined,
       } : null,
       error: result.error,
     };

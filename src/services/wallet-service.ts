@@ -7,6 +7,8 @@ import { ethers, Wallet, HDNodeWallet } from 'ethers';
 import { get9MMConfig } from '../config/9mm-config.js';
 import { logger } from '../utils/logger.js';
 import { nineMMService, I9MMSwapParams, I9MMLiquidityParams } from './nine-mm-service.js';
+import { DEXAggregatorService } from './dex-aggregator.js';
+import { DEXProtocol } from '../types/dex.js';
 
 export interface IWalletConfig {
   privateKey?: string;
@@ -21,6 +23,14 @@ export interface ITransactionResult {
   gasUsed?: string | undefined;
   confirmations?: number | undefined;
   blockNumber?: number | undefined;
+  metadata?: {
+    dexUsed: DEXProtocol;
+    quotedAmount: string;
+    savings?: {
+      percentage: number;
+      amount: string;
+    };
+  } | undefined;
 }
 
 export interface IWalletInfo {
@@ -33,9 +43,11 @@ export interface IWalletInfo {
 export class WalletService {
   private wallets: Map<number, Wallet | HDNodeWallet> = new Map(); // chainId -> Wallet
   private providers: Map<number, ethers.JsonRpcProvider> = new Map();
+  private dexAggregator: DEXAggregatorService;
 
   constructor() {
     this.initializeProviders();
+    this.dexAggregator = new DEXAggregatorService();
   }
 
   /**
@@ -136,7 +148,7 @@ export class WalletService {
   }
 
   /**
-   * Execute token swap transaction
+   * Execute token swap transaction using DEX aggregator for best price
    */
   async executeSwap(params: I9MMSwapParams): Promise<ITransactionResult> {
     try {
@@ -148,8 +160,42 @@ export class WalletService {
       // Check if user has enough balance for gas
       await this.checkGasBalance(params.chainId, wallet.address);
 
-      // Execute the swap
-      const txHash = await nineMMService.executeSwap(params, wallet);
+      // Get best quote from aggregator
+      logger.info(`Getting best swap quote from aggregator for chain ${params.chainId}`);
+      const aggregatorResult = await this.dexAggregator.getBestQuote({
+        chainId: params.chainId,
+        fromToken: params.fromToken,
+        toToken: params.toToken,
+        amount: params.amount,
+        slippage: params.slippage,
+        userAddress: params.userAddress,
+        deadline: params.deadline || Math.floor(Date.now() / 1000) + 1200, // 20 minutes default
+        dexProtocol: DEXProtocol.NINE_MM, // Default protocol, aggregator will check all available
+      });
+
+      if (!aggregatorResult.success || !aggregatorResult.data) {
+        throw new Error(`Failed to get quote: ${aggregatorResult.error?.message || 'Unknown error'}`);
+      }
+
+      const bestQuote = aggregatorResult.data.bestQuote;
+      logger.info(`Best quote from ${bestQuote.dexProtocol}: ${bestQuote.toAmount} (savings: ${aggregatorResult.data.savings.percentage.toFixed(2)}%)`);
+
+      // Execute swap based on the best DEX protocol
+      let txHash: string;
+      
+      if (bestQuote.dexProtocol === DEXProtocol.NINE_MM) {
+        // Use existing 9MM service for 9MM swaps
+        txHash = await nineMMService.executeSwap(params, wallet);
+      } else {
+        // For other DEXs, we would need to implement execution methods
+        // For now, fall back to 9MM if available on this chain
+        if ([8453, 369, 146].includes(params.chainId)) {
+          logger.warn(`Execution for ${bestQuote.dexProtocol} not implemented, falling back to 9MM DEX`);
+          txHash = await nineMMService.executeSwap(params, wallet);
+        } else {
+          throw new Error(`Swap execution not implemented for ${bestQuote.dexProtocol} on chain ${params.chainId}`);
+        }
+      }
       
       // Wait for transaction confirmation
       const provider = this.providers.get(params.chainId);
@@ -161,12 +207,21 @@ export class WalletService {
           txHash,
           gasUsed: receipt?.gasUsed.toString(),
           blockNumber: receipt?.blockNumber,
+          metadata: {
+            dexUsed: bestQuote.dexProtocol,
+            quotedAmount: bestQuote.toAmount,
+            savings: aggregatorResult.data.savings,
+          }
         };
       }
 
       return {
         success: true,
         txHash,
+        metadata: {
+          dexUsed: bestQuote.dexProtocol,
+          quotedAmount: bestQuote.toAmount,
+        }
       };
 
     } catch (error) {
